@@ -122,7 +122,7 @@ Ollama runs as a separate local service and can be shared across projects.
 
 ```bash
 ollama serve
-ollama pull qwen2.5-coder:7b
+ollama pull qwen3:8b
 ```
 
 If `OLLAMA_AUTO_START=true`, Auros will check Ollama on startup and attempt to run
@@ -141,7 +141,7 @@ Health check:
 |----------|------|---------|-------------|
 | **Ollama** |
 | `OLLAMA_BASE_URL` | str | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_MODEL` | str | `qwen2.5-coder:7b` | Model for LLM extraction |
+| `OLLAMA_MODEL` | str | `qwen3:8b` | Model for LLM extraction |
 | `OLLAMA_AUTO_START` | bool | True | Auto-start Ollama on API boot if not running |
 | `OLLAMA_START_COMMAND` | str | `ollama serve` | Command used to start Ollama |
 | `OLLAMA_START_TIMEOUT` | int | 8 | Seconds to wait for Ollama after start |

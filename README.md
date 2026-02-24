@@ -7,7 +7,7 @@ See `auros.md` for the full delivery checklist.
 ## Features
 
 - Playwright scraping of curated ATS platforms
-- LLM extraction via Ollama (Qwen 2.5 Coder)
+- LLM extraction via Ollama (Qwen3 8B)
 - Match scoring + Slack alerts (>= 0.70)
 - Salary extraction + AI estimate with confidence gating
 - React dashboard with charts and filtering
@@ -36,7 +36,7 @@ Ollama runs as a **separate local service** and can be reused by any project.
 
 ```bash
 ollama serve
-ollama pull qwen2.5-coder:7b
+ollama pull qwen3:8b
 ```
 
 Set `OLLAMA_BASE_URL` in `.env` to point to the shared service (default `http://localhost:11434`).
@@ -77,7 +77,7 @@ All settings are configured via environment variables (`.env` file):
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_MODEL` | `qwen2.5-coder:7b` | LLM model for extraction |
+| `OLLAMA_MODEL` | `qwen3:8b` | LLM model for extraction |
 | `OLLAMA_AUTO_START` | `true` | Auto-start Ollama on API boot if not running |
 | `OLLAMA_START_COMMAND` | `ollama serve` | Command used to start Ollama |
 | `OLLAMA_START_TIMEOUT` | `8` | Seconds to wait for Ollama after start |

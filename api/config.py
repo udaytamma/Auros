@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     # Ollama
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "qwen2.5-coder:7b"
+    OLLAMA_MODEL: str = "qwen3:8b"
     OLLAMA_AUTO_START: bool = True
     OLLAMA_START_COMMAND: str = "ollama serve"
     OLLAMA_START_TIMEOUT: int = 8

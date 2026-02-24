@@ -55,7 +55,7 @@ All settings in `api/config.py`. Key variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API |
-| `OLLAMA_MODEL` | `qwen2.5-coder:7b` | LLM model |
+| `OLLAMA_MODEL` | `qwen3:8b` | LLM model |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./data/auros.db` | Database |
 | `API_KEY` | None | Optional auth |
 | `CORS_ORIGINS` | `["http://localhost:5173", "http://localhost:4001"]` | Allowed origins |
