@@ -17,7 +17,10 @@ from .scheduler.jobs import start_scheduler
 from .config import settings
 from .logging import configure_logging
 from .routers import jobs, search, export, companies, health, stats, metrics
+from lama import OllamaClient, LamaConfig
+
 from .services.ollama import ensure_ollama_running
+from .services.llm import set_ollama_client
 from .metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_IN_PROGRESS
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -27,12 +30,19 @@ async def lifespan(app: FastAPI):
     await init_db()
     await _seed_companies()
     await ensure_ollama_running()
+
+    ollama = OllamaClient(LamaConfig(base_url=settings.OLLAMA_BASE_URL))
+    await ollama.start()
+    set_ollama_client(ollama)
+    app.state.ollama = ollama
+
     scheduler = None
     if not settings.DISABLE_SCHEDULER:
         scheduler = start_scheduler()
     yield
     if scheduler:
         scheduler.shutdown()
+    await ollama.stop()
 
 
 class RateLimitMiddleware:

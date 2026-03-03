@@ -3,12 +3,12 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
-import httpx
+from lama.exceptions import LamaError
 
 from ..config import settings
 from ..logging import configure_logging
 from ..utils.json import safe_json_parse
-from ..utils.retry import retry_async
+from .llm import get_ollama_client
 
 
 SALARY_PROMPT = """
@@ -56,23 +56,26 @@ def extract_salary_from_text(text: str) -> Optional[Tuple[int, int, str, float]]
 
 
 async def estimate_salary_with_llm(title: str, company: str, description: str) -> Optional[Tuple[int, int, str, float]]:
-    prompt = SALARY_PROMPT.format(title=title, company=company, description=description)
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "format": "json",
-    }
-
     logger = configure_logging()
+    client = get_ollama_client()
+    prompt = SALARY_PROMPT.format(title=title, company=company, description=description)
 
-    async def _call():
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(f"{settings.OLLAMA_BASE_URL}/api/generate", json=payload)
-            resp.raise_for_status()
-            return resp.json()
+    try:
+        data = await client.generate(
+            settings.OLLAMA_MODEL,
+            prompt,
+            format="json",
+        )
+    except LamaError as exc:
+        logger.warning_structured(
+            "llm_salary_failed",
+            title=title,
+            company=company,
+            model=settings.OLLAMA_MODEL,
+            error=str(exc),
+        )
+        return None
 
-    data = await retry_async(_call, (httpx.HTTPError, TimeoutError))
     raw = data.get("response", "")
     parsed = safe_json_parse(raw)
     if parsed is None:

@@ -2,12 +2,28 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
+from lama import OllamaClient
+from lama.exceptions import LamaError
 
 from ..config import settings
 from ..logging import configure_logging
 from ..utils.json import safe_json_parse
-from ..utils.retry import retry_async
+
+# Module-level client reference, set during app lifespan
+_client: OllamaClient | None = None
+
+
+def set_ollama_client(client: OllamaClient) -> None:
+    """Called from app lifespan to inject the shared client."""
+    global _client  # noqa: PLW0603
+    _client = client
+
+
+def get_ollama_client() -> OllamaClient:
+    """Get the shared OllamaClient. Raises if not initialized."""
+    if _client is None:
+        raise RuntimeError("OllamaClient not initialized -- call set_ollama_client() during app startup")
+    return _client
 
 
 EXTRACTION_PROMPT = """
@@ -34,23 +50,31 @@ Job Description:
 
 
 async def extract_job_info(job_description: str) -> dict[str, Any]:
-    prompt = EXTRACTION_PROMPT.format(job_description=job_description)
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "format": "json",
-    }
-
     logger = configure_logging()
+    client = get_ollama_client()
+    prompt = EXTRACTION_PROMPT.format(job_description=job_description)
 
-    async def _call():
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(f"{settings.OLLAMA_BASE_URL}/api/generate", json=payload)
-            resp.raise_for_status()
-            return resp.json()
+    try:
+        data = await client.generate(
+            settings.OLLAMA_MODEL,
+            prompt,
+            format="json",
+        )
+    except LamaError as exc:
+        logger.warning_structured(
+            "llm_extract_failed",
+            model=settings.OLLAMA_MODEL,
+            error=str(exc),
+        )
+        return {
+            "primary_function": "Other",
+            "yoe_required": None,
+            "work_mode": "unclear",
+            "location": "Unknown",
+            "relevance_score": 0.0,
+            "key_requirements": [],
+        }
 
-    data = await retry_async(_call, (httpx.HTTPError, TimeoutError))
     raw = data.get("response", "")
     parsed = safe_json_parse(raw)
     if parsed is None:
